@@ -49,7 +49,10 @@ class ContentPath:
                     continue
 
             c = ContentPath(path)
-            title = c.title()
+            try:
+                title = c.title()
+            except (FileNotFoundError, TitleNotFoundError):
+                title = path.stem
             depth = c.depth_from(root_dir)
 
             indent = "".join([" " * (depth - 1) * 2])

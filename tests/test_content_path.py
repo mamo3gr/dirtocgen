@@ -132,6 +132,50 @@ class TestContentPath(unittest.TestCase):
             actual = sut.generate_toc()
             self.assertEqual(actual, expect)
 
+    def test_generate_toc_with_no_index_doc(self):
+        with TemporaryDirectory() as tmpd:
+            dir_name = os.path.join(tmpd, "dir1")
+            os.mkdir(dir_name)
+
+            # title should be the same as the directory name
+            expect = "* [dir1](dir1)\n"
+
+            sut = ContentPath(tmpd)
+            actual = sut.generate_toc()
+            self.assertEqual(actual, expect)
+
+    def test_generate_toc_index_doc_has_no_title(self):
+        with TemporaryDirectory() as tmpd:
+            dir_name = os.path.join(tmpd, "dir1")
+            index_doc_name = os.path.join(dir_name, "README.md")
+
+            os.mkdir(dir_name)
+            open(index_doc_name, "w+").close()
+
+            # title should be the same as the directory name
+            expect = "* [dir1](dir1)\n"
+
+            sut = ContentPath(tmpd)
+            actual = sut.generate_toc()
+            self.assertEqual(actual, expect)
+
+    def test_generate_toc_failed_to_get_title(self):
+        with TemporaryDirectory() as tmpd:
+            dir_name = os.path.join(tmpd, "dir1")
+            doc_name = os.path.join(tmpd, "doc.md")
+
+            os.mkdir(dir_name)
+            open(doc_name, "w+").close()
+
+            # fmt: off
+            expect = "* [dir1](dir1)\n" \
+                     "* [doc](doc.md)\n"
+            # fmt: on
+
+            sut = ContentPath(tmpd)
+            actual = sut.generate_toc()
+            self.assertEqual(actual, expect)
+
     def test_generate_failed_with_not_directory(self):
         with NamedTemporaryFile() as tmpf:
             sut = ContentPath(tmpf.name)
