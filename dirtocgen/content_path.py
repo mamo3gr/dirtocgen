@@ -21,7 +21,11 @@ class ContentPath:
         else:
             filename = self.path
 
-        with open(filename, "r") as f:
+        return self._get_header(filename)
+
+    @staticmethod
+    def _get_header(file: Path):
+        with open(file, "r") as f:
             header = f.readline()
             pattern = r"#+\s+(.*)"
             result = re.match(pattern, header)
