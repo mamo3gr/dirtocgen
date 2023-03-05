@@ -148,6 +148,20 @@ class TestContentPath(unittest.TestCase):
             )
             self.assertEqual(expect, actual)
 
+    def test_generate_toc_with_ignoring_hidden_file(self):
+        with TemporaryDirectory() as tmpd:
+            (Path(tmpd) / ".hidden_dir").mkdir()
+            (Path(tmpd) / "dir1").mkdir()
+            (Path(tmpd) / "dir1" / ".hidden_dir").mkdir()
+            (Path(tmpd) / "dir1" / ".hidden_doc.md").open("w+").close()
+            sut = ContentPath(tmpd)
+            actual = sut.generate_toc()  # ignore_hidden=True by default
+            expect = (
+                "* [dir1](dir1)"
+                # the others would not appear because they are hidden files/directories
+            )
+            self.assertEqual(expect, actual)
+
     def test_generate_toc_with_no_index_doc(self):
         with TemporaryDirectory() as tmpd:
             dir_name = os.path.join(tmpd, "dir1")
