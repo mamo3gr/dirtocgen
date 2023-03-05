@@ -302,17 +302,17 @@ class TestContentPath(unittest.TestCase):
             sut = ContentPath(tmpd)
             sut.update_toc()
 
-            # fmt: off
-            expect_body = "# Document\n" \
-                          "\n" \
-                          "[//]: # (dirtocgen start)\n" \
-                          "\n" \
-                          "* [dir1](dir1)\n" \
-                          "\n" \
-                          "[//]: # (dirtocgen end)\n" \
-                          "\n" \
-                          "body\n"
-            # fmt: on
+            expect_body = (
+                "# Document\n"
+                "\n"
+                "[//]: # (dirtocgen start)\n"
+                "\n"
+                "* [dir1](dir1)\n"
+                "\n"
+                "[//]: # (dirtocgen end)\n"
+                "\n"
+                "body\n"
+            )
 
             with open(index_doc_name, "r") as f:
                 actual_body = f.read()
