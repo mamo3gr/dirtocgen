@@ -15,13 +15,17 @@ class ContentPath:
     def is_hidden(self) -> bool:
         return any(p.startswith(".") for p in self.path.parts)
 
-    def title(self) -> str:
+    def doc_path(self) -> Path:
         if self.path.is_dir():
-            filename = self.path / "README.md"
+            path = self.path / "README.md"
         else:
-            filename = self.path
+            path = self.path
 
-        return self._get_header(filename)
+        return path
+
+    def title(self) -> str:
+        path = self.doc_path()
+        return self._get_header(path)
 
     @staticmethod
     def _get_header(file: Path):
@@ -64,3 +68,28 @@ class ContentPath:
             toc += toc_line
 
         return toc
+
+    def create_index_doc(self):
+        if not self.path.is_dir():
+            raise ValueError(f"{self.path} is not a directory")
+
+        index_doc = self.path / "README.md"
+        index_doc.touch()
+
+    def insert_toc(self):
+        path = self.doc_path()
+        self._insert_toc(path)
+
+    def _insert_toc(self, path):
+        with open(path, "r") as f:
+            lines = f.readlines()
+
+        lines.insert(1, "\n")
+        lines.insert(2, "[//]: # (dirtocgen start)\n")
+        lines.insert(3, "\n")
+        lines.insert(4, self.generate_toc())
+        lines.insert(5, "\n")
+        lines.insert(6, "[//]: # (dirtocgen end)\n")
+
+        with open(path, "w") as f:
+            f.writelines(lines)

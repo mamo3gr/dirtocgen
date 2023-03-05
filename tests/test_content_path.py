@@ -181,3 +181,52 @@ class TestContentPath(unittest.TestCase):
             sut = ContentPath(tmpf.name)
             with self.assertRaises(ValueError):
                 sut.generate_toc()
+
+    def test_create_index_doc(self):
+        with TemporaryDirectory() as tmpd:
+            sut = ContentPath(tmpd)
+            sut.create_index_doc()
+
+            expect_path = os.path.join(tmpd, "README.md")
+            self.assertTrue(os.path.exists(expect_path))
+
+    def test_create_index_doc_failed_with_file(self):
+        with NamedTemporaryFile() as tmpf:
+            sut = ContentPath(tmpf.name)
+
+            with self.assertRaises(ValueError):
+                sut.create_index_doc()
+
+    def test_insert_toc(self):
+        with TemporaryDirectory() as tmpd:
+            dir_name = os.path.join(tmpd, "dir1")
+            os.mkdir(dir_name)
+
+            index_doc_name = os.path.join(tmpd, "README.md")
+            with open(index_doc_name, "w") as f:
+                # fmt: off
+                index_doc_body = "# Document\n" \
+                                 "\n" \
+                                 "body\n"
+                # fmt: on
+                f.write(index_doc_body)
+
+            sut = ContentPath(tmpd)
+            sut.insert_toc()
+
+            # fmt: off
+            expect_body = "# Document\n" \
+                          "\n" \
+                          "[//]: # (dirtocgen start)\n" \
+                          "\n" \
+                          "* [dir1](dir1)\n" \
+                          "\n" \
+                          "[//]: # (dirtocgen end)\n" \
+                          "\n" \
+                          "body\n"
+            # fmt: on
+
+            with open(index_doc_name, "r") as f:
+                actual_body = f.read()
+
+            self.assertEqual(expect_body, actual_body)
