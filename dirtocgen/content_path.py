@@ -6,6 +6,10 @@ class TitleNotFoundError(Exception):
     """Failed to find title of the file"""
 
 
+class UpdateTocError(Exception):
+    """Failed to update toc"""
+
+
 class ContentPath:
     def __init__(self, path: str | Path):
         if isinstance(path, str):
@@ -49,7 +53,7 @@ class ContentPath:
             raise ValueError(f"{self.path} is not a directory")
 
         root_dir = self.path
-        toc = ""
+        toc_lines: list[str] = []
 
         for path in sorted(root_dir.glob("**/*")):
             if path.is_file():
@@ -64,10 +68,10 @@ class ContentPath:
             depth = c.depth_from(root_dir)
 
             indent = "".join([" " * (depth - 1) * 2])
-            toc_line = f"{indent}* [{title}]({path.relative_to(root_dir)})\n"
-            toc += toc_line
+            toc_line = f"{indent}* [{title}]({path.relative_to(root_dir)})"
+            toc_lines.append(toc_line)
 
-        return toc
+        return "\n".join(toc_lines)
 
     def create_index_doc(self):
         if not self.path.is_dir():
@@ -84,12 +88,34 @@ class ContentPath:
         with open(path, "r") as f:
             lines = f.readlines()
 
-        lines.insert(1, "\n")
-        lines.insert(2, "[//]: # (dirtocgen start)\n")
-        lines.insert(3, "\n")
-        lines.insert(4, self.generate_toc())
-        lines.insert(5, "\n")
-        lines.insert(6, "[//]: # (dirtocgen end)\n")
+        lines.insert(1, "\n" + self._generate_toc_text() + "\n")
 
         with open(path, "w") as f:
             f.writelines(lines)
+
+    def _generate_toc_text(self):
+        return (
+            f"[//]: # (dirtocgen start)\n"
+            f"\n"
+            f"{self.generate_toc()}\n"
+            f"\n"
+            f"[//]: # (dirtocgen end)"
+        )
+
+    def update_toc(self):
+        path = self.doc_path()
+        self._update_toc(path)
+
+    def _update_toc(self, path):
+        with open(path, "r") as f:
+            text = f.read()
+
+        pattern = r"\[//\]: # \(dirtocgen start\)[\s\S]+\[//\]: # \(dirtocgen end\)"
+        text_updated, number_of_subs_made = re.subn(
+            pattern, self._generate_toc_text(), text
+        )
+        if number_of_subs_made == 0:
+            raise UpdateTocError
+
+        with open(path, "w") as f:
+            f.write(text_updated)

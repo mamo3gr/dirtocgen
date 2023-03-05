@@ -2,7 +2,7 @@ import os
 import unittest
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from content_path import ContentPath, TitleNotFoundError
+from content_path import ContentPath, TitleNotFoundError, UpdateTocError
 
 
 class TestContentPath(unittest.TestCase):
@@ -122,11 +122,11 @@ class TestContentPath(unittest.TestCase):
             with open(dummy_file_name, "w") as f:
                 f.writelines("This file should not appear in the table of contents")
 
-            # fmt: off
-            expect = "* [Directory 1](dir1)\n" \
-                     "  * [Document](dir1/doc.md)\n" \
-                     "* [Extra document](extra_doc.md)\n"
-            # fmt: on
+            expect = (
+                "* [Directory 1](dir1)\n"
+                "  * [Document](dir1/doc.md)\n"
+                "* [Extra document](extra_doc.md)"
+            )
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
@@ -138,7 +138,7 @@ class TestContentPath(unittest.TestCase):
             os.mkdir(dir_name)
 
             # title should be the same as the directory name
-            expect = "* [dir1](dir1)\n"
+            expect = "* [dir1](dir1)"
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
@@ -153,7 +153,7 @@ class TestContentPath(unittest.TestCase):
             open(index_doc_name, "w+").close()
 
             # title should be the same as the directory name
-            expect = "* [dir1](dir1)\n"
+            expect = "* [dir1](dir1)"
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
@@ -168,8 +168,10 @@ class TestContentPath(unittest.TestCase):
             open(doc_name, "w+").close()
 
             # fmt: off
-            expect = "* [dir1](dir1)\n" \
-                     "* [doc](doc.md)\n"
+            expect = (
+                "* [dir1](dir1)\n"
+                "* [doc](doc.md)"
+            )
             # fmt: on
 
             sut = ContentPath(tmpd)
@@ -205,14 +207,56 @@ class TestContentPath(unittest.TestCase):
             index_doc_name = os.path.join(tmpd, "README.md")
             with open(index_doc_name, "w") as f:
                 # fmt: off
-                index_doc_body = "# Document\n" \
-                                 "\n" \
-                                 "body\n"
+                index_doc_body = (
+                    "# Document\n"
+                    "\n"
+                    "body\n"
+                )
                 # fmt: on
                 f.write(index_doc_body)
 
             sut = ContentPath(tmpd)
             sut.insert_toc()
+
+            expect_body = (
+                "# Document\n"
+                "\n"
+                "[//]: # (dirtocgen start)\n"
+                "\n"
+                "* [dir1](dir1)\n"
+                "\n"
+                "[//]: # (dirtocgen end)\n"
+                "\n"
+                "body\n"
+            )
+
+            with open(index_doc_name, "r") as f:
+                actual_body = f.read()
+
+            self.assertEqual(expect_body, actual_body)
+
+    def test_update_toc(self):
+        with TemporaryDirectory() as tmpd:
+            dir_name = os.path.join(tmpd, "dir1")
+            os.mkdir(dir_name)
+
+            index_doc_name = os.path.join(tmpd, "README.md")
+            with open(index_doc_name, "w") as f:
+                index_doc_body = (
+                    "# Document\n"
+                    "\n"
+                    "[//]: # (dirtocgen start)\n"
+                    "\n"
+                    "This line would be updated (replaced with new toc)\n"
+                    "\n"
+                    "[//]: # (dirtocgen end)\n"
+                    "\n"
+                    "body\n"
+                )
+                f.write(index_doc_body)
+
+            sut = ContentPath(tmpd)
+            sut.update_toc()
 
             # fmt: off
             expect_body = "# Document\n" \
@@ -230,3 +274,12 @@ class TestContentPath(unittest.TestCase):
                 actual_body = f.read()
 
             self.assertEqual(expect_body, actual_body)
+
+    def test_update_toc_no_toc_found(self):
+        with TemporaryDirectory() as tmpd:
+            index_doc_name = os.path.join(tmpd, "README.md")
+            open(index_doc_name, "w+").close()
+
+            sut = ContentPath(tmpd)
+            with self.assertRaises(UpdateTocError):
+                sut.update_toc()
