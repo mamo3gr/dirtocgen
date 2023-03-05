@@ -48,7 +48,7 @@ class ContentPath:
         except ValueError as e:
             raise e
 
-    def generate_toc(self) -> str:
+    def generate_toc(self, max_depth: int | None = None) -> str:
         if not self.path.is_dir():
             raise ValueError(f"{self.path} is not a directory")
 
@@ -61,11 +61,15 @@ class ContentPath:
                     continue
 
             c = ContentPath(path)
+
+            depth = c.depth_from(root_dir)
+            if max_depth and depth > max_depth:
+                continue
+
             try:
                 title = c.title()
             except (FileNotFoundError, TitleNotFoundError):
                 title = path.stem
-            depth = c.depth_from(root_dir)
 
             indent = "".join([" " * (depth - 1) * 2])
             toc_line = f"{indent}* [{title}]({path.relative_to(root_dir)})"

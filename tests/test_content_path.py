@@ -1,5 +1,6 @@
 import os
 import unittest
+from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from content_path import ContentPath, TitleNotFoundError, UpdateTocError
@@ -131,6 +132,21 @@ class TestContentPath(unittest.TestCase):
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
             self.assertEqual(actual, expect)
+
+    def test_generate_toc_with_specifying_depth(self):
+        with TemporaryDirectory() as tmpd:
+            (Path(tmpd) / "dir1").mkdir()
+            (Path(tmpd) / "dir1" / "dir11").mkdir()
+            (Path(tmpd) / "doc1.md").open("w+").close()
+
+            sut = ContentPath(tmpd)
+            actual = sut.generate_toc(max_depth=1)
+            expect = (
+                "* [dir1](dir1)\n"
+                # dir11 would not appear here because its depth is 2
+                "* [doc1](doc1.md)"
+            )
+            self.assertEqual(expect, actual)
 
     def test_generate_toc_with_no_index_doc(self):
         with TemporaryDirectory() as tmpd:
