@@ -78,7 +78,10 @@ class ContentPath:
             raise ValueError(f"{self.path} is not a directory")
 
         index_doc = self.path / "README.md"
-        index_doc.touch()
+        index_doc.touch(exist_ok=False)
+        with open(index_doc, "w") as f:
+            title = self.path.name
+            f.write(f"# {title}\n")
 
     def insert_toc(self):
         path = self.doc_path()

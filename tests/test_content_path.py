@@ -191,6 +191,20 @@ class TestContentPath(unittest.TestCase):
 
             expect_path = os.path.join(tmpd, "README.md")
             self.assertTrue(os.path.exists(expect_path))
+            with open(expect_path) as f:
+                expect_title = os.path.basename(tmpd)
+                expect_text = f"# {expect_title}\n"
+                actual_text = f.read()
+                self.assertEqual(expect_text, actual_text)
+
+    def test_create_index_doc_failed_when_file_already_exists(self):
+        with TemporaryDirectory() as tmpd:
+            sut = ContentPath(tmpd)
+            index_doc = os.path.join(tmpd, "README.md")
+            open(index_doc, "w+").close()
+
+            with self.assertRaises(FileExistsError):
+                sut.create_index_doc()
 
     def test_create_index_doc_failed_with_file(self):
         with NamedTemporaryFile() as tmpf:
