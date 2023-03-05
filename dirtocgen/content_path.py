@@ -48,7 +48,7 @@ class ContentPath:
         except ValueError as e:
             raise e
 
-    def generate_toc(self, max_depth: int | None = None) -> str:
+    def generate_toc(self, max_depth: int | None = None, ignore_hidden=True) -> str:
         if not self.path.is_dir():
             raise ValueError(f"{self.path} is not a directory")
 
@@ -61,6 +61,8 @@ class ContentPath:
                     continue
 
             c = ContentPath(path)
+            if ignore_hidden and c.is_hidden():
+                continue
 
             depth = c.depth_from(root_dir)
             if max_depth and depth > max_depth:
