@@ -17,7 +17,7 @@ class TestContentPath(unittest.TestCase):
                 f.writelines("# Title")
 
             sut = ContentPath(tmpf.name)
-            self.assertEqual(sut.title(), "Title")
+            self.assertEqual("Title", sut.title())
 
     def test_title_lower_level(self):
         with NamedTemporaryFile() as tmpf:
@@ -25,7 +25,7 @@ class TestContentPath(unittest.TestCase):
                 f.writelines("## Lower level header is OK")
 
             sut = ContentPath(tmpf.name)
-            self.assertEqual(sut.title(), "Lower level header is OK")
+            self.assertEqual("Lower level header is OK", sut.title())
 
     def test_title_file_not_found(self):
         with NamedTemporaryFile() as tmpf:
@@ -55,8 +55,8 @@ class TestContentPath(unittest.TestCase):
 
             sut = ContentPath(tmpd)
             self.assertEqual(
-                sut.title(),
                 "Title of directory is that of README.md under the directory",
+                sut.title(),
             )
 
     def test_title_for_directory_index_document_not_found(self):
@@ -70,19 +70,19 @@ class TestContentPath(unittest.TestCase):
             dir_name = os.path.join(tmpd, "dir1")
             os.mkdir(dir_name)
             sut = ContentPath(dir_name)
-            self.assertEqual(sut.depth_from(tmpd), 1)
+            self.assertEqual(1, sut.depth_from(tmpd))
 
     def test_depth_from_file(self):
         with TemporaryDirectory() as tmpd:
             doc_name = os.path.join(tmpd, "doc.md")
             open(doc_name, "w+").close()
             sut = ContentPath(doc_name)
-            self.assertEqual(sut.depth_from(tmpd), 1)
+            self.assertEqual(1, sut.depth_from(tmpd))
 
     def test_depth_from_itself(self):
         with TemporaryDirectory() as tmpd:
             sut = ContentPath(tmpd)
-            self.assertEqual(sut.depth_from(tmpd), 0)
+            self.assertEqual(0, sut.depth_from(tmpd))
 
     def test_depth_from_file_under_directory(self):
         with TemporaryDirectory() as tmpd:
@@ -93,7 +93,7 @@ class TestContentPath(unittest.TestCase):
             open(doc_name, "w+").close()
 
             sut = ContentPath(doc_name)
-            self.assertEqual(sut.depth_from(tmpd), 2)
+            self.assertEqual(2, sut.depth_from(tmpd))
 
     def test_depth_from_failed(self):
         with TemporaryDirectory() as tmpd1, TemporaryDirectory() as tmpd2:
@@ -131,7 +131,7 @@ class TestContentPath(unittest.TestCase):
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
-            self.assertEqual(actual, expect)
+            self.assertEqual(expect, actual)
 
     def test_generate_toc_with_specifying_depth(self):
         with TemporaryDirectory() as tmpd:
@@ -172,7 +172,7 @@ class TestContentPath(unittest.TestCase):
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
-            self.assertEqual(actual, expect)
+            self.assertEqual(expect, actual)
 
     def test_generate_toc_index_doc_has_no_title(self):
         with TemporaryDirectory() as tmpd:
@@ -187,7 +187,7 @@ class TestContentPath(unittest.TestCase):
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
-            self.assertEqual(actual, expect)
+            self.assertEqual(expect, actual)
 
     def test_generate_toc_failed_to_get_title(self):
         with TemporaryDirectory() as tmpd:
@@ -206,7 +206,7 @@ class TestContentPath(unittest.TestCase):
 
             sut = ContentPath(tmpd)
             actual = sut.generate_toc()
-            self.assertEqual(actual, expect)
+            self.assertEqual(expect, actual)
 
     def test_generate_failed_with_not_directory(self):
         with NamedTemporaryFile() as tmpf:
