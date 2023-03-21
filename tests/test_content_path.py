@@ -327,3 +327,37 @@ class TestContentPath(unittest.TestCase):
             sut = ContentPath(tmpd)
             with self.assertRaises(UpdateTocError):
                 sut.update_toc()
+
+    def test_has_toc(self):
+        with NamedTemporaryFile() as tmpf:
+            with open(tmpf.name, "w") as f:
+                doc_body = (
+                    "# Document\n"
+                    "\n"
+                    "[//]: # (dirtocgen start)\n"
+                    "\n"
+                    "It does not matter even this line is not actual toc\n"
+                    "\n"
+                    "[//]: # (dirtocgen end)\n"
+                    "\n"
+                    "body\n"
+                )
+                f.write(doc_body)
+
+            sut = ContentPath(tmpf.name)
+            self.assertTrue(sut.has_toc())
+
+    def test_has_no_toc(self):
+        with NamedTemporaryFile() as tmpf:
+            with open(tmpf.name, "w") as f:
+                # fmt: off
+                doc_body = (
+                    "# Title\n"
+                    "\n"
+                    "This document has no toc\n"
+                )
+                # fmt: on
+                f.write(doc_body)
+
+            sut = ContentPath(tmpf.name)
+            self.assertFalse(sut.has_toc())

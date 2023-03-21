@@ -89,42 +89,56 @@ class ContentPath:
             title = self.path.name
             f.write(f"# {title}\n")
 
-    def insert_toc(self):
+    def insert_toc(self, *args, **kwargs):
         path = self.doc_path()
-        self._insert_toc(path)
+        self._insert_toc(path, *args, **kwargs)
 
-    def _insert_toc(self, path):
+    def _insert_toc(self, path, *args, **kwargs):
         with open(path, "r") as f:
             lines = f.readlines()
 
-        lines.insert(1, "\n" + self._generate_toc_text() + "\n")
+        toc_text = self._generate_toc_text(*args, **kwargs)
+        lines.insert(1, "\n" + toc_text + "\n")
 
         with open(path, "w") as f:
             f.writelines(lines)
 
-    def _generate_toc_text(self):
+    def _generate_toc_text(self, *args, **kwargs):
         return (
             f"[//]: # (dirtocgen start)\n"
             f"\n"
-            f"{self.generate_toc()}\n"
+            f"{self.generate_toc(*args, **kwargs)}\n"
             f"\n"
             f"[//]: # (dirtocgen end)"
         )
 
-    def update_toc(self):
+    def update_toc(self, *args, **kwargs):
         path = self.doc_path()
-        self._update_toc(path)
+        self._update_toc(path, *args, **kwargs)
 
-    def _update_toc(self, path):
+    def _update_toc(self, path, *args, **kwargs):
         with open(path, "r") as f:
             text = f.read()
 
+        toc_text = self._generate_toc_text(*args, **kwargs)
         pattern = r"\[//\]: # \(dirtocgen start\)[\s\S]+\[//\]: # \(dirtocgen end\)"
-        text_updated, number_of_subs_made = re.subn(
-            pattern, self._generate_toc_text(), text
-        )
+        text_updated, number_of_subs_made = re.subn(pattern, toc_text, text)
         if number_of_subs_made == 0:
             raise UpdateTocError
 
         with open(path, "w") as f:
             f.write(text_updated)
+
+    def has_toc(self):
+        path = self.doc_path()
+        return self._has_toc(path)
+
+    @staticmethod
+    def _has_toc(path):
+        with open(path, "r") as f:
+            text = f.read()
+
+        pattern = r"\[//\]: # \(dirtocgen start\)[\s\S]+\[//\]: # \(dirtocgen end\)"
+        result = re.search(pattern, text)
+
+        return result is not None
