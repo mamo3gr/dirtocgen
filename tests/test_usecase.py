@@ -8,6 +8,8 @@ from typing import Callable
 
 from usecase import insert_or_update_root_toc_and_create_or_update_children_index_docs
 
+from tests.helper import directory2string
+
 
 @dataclass
 class TestCase:
@@ -47,25 +49,3 @@ class TestUsecase(unittest.TestCase):
                         directory2string(expect_dir),
                         directory2string(tmpd),
                     )
-
-
-def directory2string(root_dir: str | Path):
-    """
-    Helper function, which converts directories and files' name and
-    their contents into string.
-    """
-    root_dir = Path(root_dir)
-
-    ret_str = ""
-    for path in sorted(root_dir.glob("**/*")):
-        header = "[DIRECTORY]" if path.is_dir() else "[FILE]"
-
-        ret_str += f"{header} {path.relative_to(root_dir)}\n"
-
-        if path.is_file():
-            with open(path, "r") as f:
-                ret_str += f.read()
-
-        ret_str += "\n"
-
-    return ret_str
