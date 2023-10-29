@@ -1,0 +1,16 @@
+[FILE] README.md
+# Root index
+
+[//]: # (dirtocgen start)
+
+* [dir1](dir1)
+
+[//]: # (dirtocgen end)
+
+body
+
+[DIRECTORY] dir1
+[FILE] dir1/README.md
+# dir1
+
+body

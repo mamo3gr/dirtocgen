@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 from pathlib import Path
 from typing import IO
@@ -9,6 +11,10 @@ def directory2string(root_dir: str | Path):
     their contents into string.
     """
     root_dir = Path(root_dir)
+    if not root_dir.exists():
+        raise ValueError(f"root_dir does not exist: {root_dir}")
+    if not root_dir.is_dir():
+        raise NotADirectoryError(f"root_dir is not a directory: {root_dir}")
 
     ret_str = ""
     for path in sorted(root_dir.glob("**/*")):
@@ -57,6 +63,11 @@ def string2directory(root_dir: str | Path, string: str):
     with respect to given string.
     """
     root_dir = Path(root_dir)
+    if not root_dir.exists():
+        raise ValueError(f"root_dir does not exist: {root_dir}")
+    if not root_dir.is_dir():
+        raise NotADirectoryError(f"root_dir is not a directory: {root_dir}")
+
     writer = BufferedFileWriter()
 
     for line in string.split("\n"):
